@@ -1,9 +1,8 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import { Container } from "react-bootstrap";
-import Link from "next/link";
 
 import Header from "@/components/header"
 
@@ -19,91 +18,81 @@ export default function NoteEditor() {
   const [content, setContent] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("notes");
-    if (saved) {
-      const notes: Note[] = JSON.parse(saved);
-      const found = notes.find((p) => p.id === Number(id));
-      if (found) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadNote(found);
-        setTitle(found.title);
-        setContent(found.content);
+    fetch(`/api/notes/${id}`).then(async (res) => {
+      if (res.status === 404) router.push('/not-found');
+      else {
+        const data = await res.json();
+        loadNote(data);
+        setTitle(data.title);
+        setContent(data.content);
       }
-    }
-  }, [id]);
+    });
+  }, [id, router]);
 
   if (!note) return <div className="container py-4">Note not found.</div>
 
-  const onSave = (e: React.FormEvent) => {
+  const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return alert("Title must not be empty");
 
-    const savedNote: Note = {
-      ...note,
-      title,
-      content,
-      lastEditedAt: new Date().toLocaleDateString("en-US"),
-    };
-
-    const saved = localStorage.getItem("notes");
-    const notes = saved ? JSON.parse(saved) : [];
-    const index = notes.findIndex((p: Note) => p.id === Number(id));
-    notes[index] = savedNote;
-    localStorage.setItem("notes", JSON.stringify(notes));
-
-    alert("Note saved!");
-
-    router.push(`/note/${id}`);
+    await fetch(`/api/notes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        content,
+        movedToTrash: note.movedToTrash
+      }),
+    }).then(async () => {
+      alert("Note saved!");
+      window.location.reload();
+    });
   }
 
-  const onMoveTrash = (e: React.FormEvent) => {
+  const onMoveTrash = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const savedNote: Note = {
-      ...note,
-      movedToTrash: true
-    };
-
-    const saved = localStorage.getItem("notes");
-    const notes = saved ? JSON.parse(saved) : [];
-    const index = notes.findIndex((p: Note) => p.id === Number(id));
-    notes[index] = savedNote;
-    localStorage.setItem("notes", JSON.stringify(notes));
-
-    alert("Note moved to Trash!");
-
-    router.refresh();
+    await fetch(`/api/notes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        content,
+        movedToTrash: true
+      }),
+    }).then(async () => {
+      alert("Note moved to Trash!");
+      window.location.reload();
+    });
   }
 
-  const onRestore = (e: React.FormEvent) => {
+  const onRestore = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const savedNote: Note = {
-      ...note,
-      movedToTrash: false
-    };
+    await fetch(`/api/notes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        content,
+        movedToTrash: false
+      }),
+    }).then(async () => {
+      alert("Note restored from Trash!");
+      window.location.reload();
+    });
 
-    const saved = localStorage.getItem("notes");
-    const notes = saved ? JSON.parse(saved) : [];
-    const index = notes.findIndex((p: Note) => p.id === Number(id));
-    notes[index] = savedNote;
-    localStorage.setItem("notes", JSON.stringify(notes));
 
-    alert("Note restored from Trash!");
-
-    router.refresh();
+    window.location.reload();
   }
 
-  const onDelete = (e: React.FormEvent) => {
+  const onDelete = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!confirm("Are you sure you want to delete this note?")) return;
 
-    const saved = localStorage.getItem("notes");
-    if (!saved) return;
+    await fetch(`/api/notes/${id}`, { method: 'DELETE' });
 
-    const notes: Note[] = JSON.parse(saved).filter((p: Note) => p.id !== Number(id));
-    localStorage.setItem("notes", JSON.stringify(notes));
     router.push("/");
   }
 

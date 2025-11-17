@@ -11,25 +11,17 @@ export default function NewNotePage() {
   const [title, setTitle] = useState("");
   const router = useRouter();
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return alert("Title must not be empty");
 
-    const newNote: Note = {
-      id: Date.now(),
-      title,
-      content: "",
-      createdAt: new Date().toLocaleDateString("en-US"),
-      lastEditedAt: new Date().toLocaleDateString("en-US"),
-      movedToTrash: false
-    };
-
-    const saved = localStorage.getItem("notes");
-    const notes = saved ? JSON.parse(saved) : [];
-    notes.push(newNote);
-    localStorage.setItem("notes", JSON.stringify(notes));
-
-    router.push(`/note/${newNote.id}`);
+    await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    }).then(async (res) => {
+      router.push(`/note/${(await res.json()).id}`);
+    });
   }
 
   return <>
@@ -39,7 +31,7 @@ export default function NewNotePage() {
         <div className="mb-3">
           <label className="form-label">Title</label>
           <input
-            className="form-control"
+            className="form-control form-control-lg"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter note title"

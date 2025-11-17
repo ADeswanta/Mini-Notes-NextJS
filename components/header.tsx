@@ -23,7 +23,6 @@ export default function Header({
   return (
     <div className="container py-2 d-flex flex-column align-items-start gap-4">
       {hasBack ? <Button variant="outline-primary" onClick={() => { backHref ? router.push(backHref) : router.back() }} className="me-4">
-        <i className="bi bi-arrow-left"></i>
         Go Back
       </Button> : ""}
       <div className="d-flex">

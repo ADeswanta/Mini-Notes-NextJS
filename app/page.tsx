@@ -3,7 +3,7 @@
 // import Image from "next/image";
 // import styles from "./page.module.css";
 
-import { Container, Card, Row } from "react-bootstrap";
+import { Container, Card } from "react-bootstrap";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -14,13 +14,12 @@ import Header from "@/components/header";
 export default function Home() {
   const [notes, loadNotes] = useState<Note[]>([]);
 
-  const init = () => {
-    const saved = localStorage.getItem("notes");
-    if (saved) {
-      loadNotes(JSON.parse(saved));
-    } else {
-      loadNotes([]);
-    }
+  const init = async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/notes`, {
+      cache: 'no-store',
+    });
+
+    loadNotes(await res.json());
   };
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export default function Home() {
 
         <div style={{ gridTemplateColumns: "1fr 1fr" }} className="d-grid gap-2 mb-4">
           {notes
-            .filter((post) => !post.movedToTrash)
+            .filter((note) => !note.movedToTrash)
             .map((note) => (
             <Link key={note.id} href={`/note/${note.id}`} className="text-decoration-none">
               <Card>
@@ -57,26 +56,32 @@ export default function Home() {
           ))}
         </div>
 
-        <p className="text-muted">Trash notes</p>
 
-        <div style={{ gridTemplateColumns: "1fr 1fr", opacity: .5 }} className="d-grid gap-2">
-          {notes
-            .filter((post) => post.movedToTrash)
-            .map((note) => (
-            <Link key={note.id} href={`/note/${note.id}`} className="text-decoration-none">
-              <Card>
-                <Card.Body>
-                  <Card.Title>{note.title}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">Last edited at {note.lastEditedAt}</Card.Subtitle>
-                  <Card.Text>
-                    {note.content}
-                  </Card.Text>
-                </Card.Body>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
+        {
+          notes.length > 0
+          ?
+            <>
+              <p className="text-muted">Trash notes</p>
+              <div style={{ gridTemplateColumns: "1fr 1fr", opacity: .5 }} className="d-grid gap-2">
+                {notes
+                  .filter((note) => note.movedToTrash)
+                  .map((note) => (
+                  <Link key={note.id} href={`/note/${note.id}`} className="text-decoration-none">
+                    <Card>
+                      <Card.Body>
+                        <Card.Title>{note.title}</Card.Title>
+                        <Card.Subtitle className="mb-2 text-muted">Last edited at {note.lastEditedAt}</Card.Subtitle>
+                        <Card.Text>
+                          {note.content}
+                        </Card.Text>
+                      </Card.Body>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </>
+            : ""
+        }
       </Container>
     </div>
   );
