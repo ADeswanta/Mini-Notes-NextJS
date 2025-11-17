@@ -3,12 +3,20 @@
 import { Button, Container } from "react-bootstrap"
 
 import Header from "@/components/header"
+import { useState } from "react";
 
 export default function DummyTextPage() {
   const [content, setContent] = useState("");
 
   const onGenerate = async () => {
-
+    const res = await fetch('https://corporatelorem.kovah.de/api/10', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json();
+    setContent(data.paragraphs.join('\n'));
   }
 
   return <main>
@@ -20,7 +28,6 @@ export default function DummyTextPage() {
           className="form-control"
           rows={20}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
           placeholder="Results are generated here"
           >
         </textarea>

@@ -32,9 +32,14 @@ export default function Home() {
       <Header title="Notes"/>
       <Container>
 
-        <Link href="/new" className="btn btn-primary mb-3">
-          + New Note
-        </Link>
+        <div className="d-flex gap-2">
+          <Link href="/new" className="btn btn-primary mb-3">
+            + New Note
+          </Link>
+          <Link href="/dummy-text" className="btn btn-outline-primary mb-3">
+            Generate Dummy Text
+          </Link>
+        </div>
 
         { notes.length === 0 && <p>No notes created yet.</p> }
 
